@@ -43,28 +43,28 @@ class DroidMaster(object):
     POLL_INTERVAL = 1
 
     def __init__(self,
-                 app_path=None,
-                 is_emulator=False,
-                 output_dir=None,
-                 env_policy=None,
-                 policy_name=None,
-                 random_input=False,
-                 script_path=None,
-                 event_count=None,
-                 event_interval=None,
-                 timeout=None,
-                 keep_app=None,
-                 keep_env=False,
-                 cv_mode=False,
-                 debug_mode=False,
-                 profiling_method=None,
-                 grant_perm=False,
-                 enable_accessibility_hard=False,
-                 qemu_hda=None,
-                 qemu_no_graphic=False,
-                 humanoid=None,
-                 ignore_ad=False,
-                 replay_output=None):
+                app_path=None,
+                is_emulator=False,
+                output_dir=None,
+                env_policy=None,
+                policy_name=None,
+                random_input=False,
+                script_path=None,
+                event_count=None,
+                event_interval=None,
+                timeout=None,
+                keep_app=None,
+                keep_env=False,
+                cv_mode=False,
+                debug_mode=False,
+                profiling_method=None,
+                grant_perm=False,
+                enable_accessibility_hard=False,
+                qemu_hda=None,
+                qemu_no_graphic=False,
+                humanoid=None,
+                ignore_ad=False,
+                replay_output=None):
         """
         initiate droidmaster, and
         initiate droidbot's with configurations
@@ -174,28 +174,28 @@ class DroidMaster(object):
         # 3. new DroidWorker adapter
         script_path = init_script_path if init_script_path else self.script_path
         device["droidbot"] = DroidBotConn(device["id"],
-                                          app_path=self.app_path,
-                                          device_serial=device["device"].serial,
-                                          is_emulator=self.is_emulator,
-                                          output_dir=self.output_dir,
-                                          env_policy=self.env_policy,
-                                          policy_name=self.policy_name,
-                                          random_input=self.random_input,
-                                          script_path=script_path,
-                                          event_count=self.event_count,
-                                          event_interval=self.event_interval,
-                                          timeout=self.timeout,
-                                          keep_app=self.keep_app,
-                                          keep_env=self.keep_env,
-                                          cv_mode=self.cv_mode,
-                                          debug_mode=self.debug_mode,
-                                          profiling_method=self.profiling_method,
-                                          grant_perm=self.grant_perm,
-                                          enable_accessibility_hard=self.enable_accessibility_hard,
-                                          master="http://%s:%d/" % (self.domain, self.rpc_port),
-                                          humanoid=self.humanoid,
-                                          ignore_ad=self.ignore_ad,
-                                          replay_output=self.replay_output)
+                                            app_path=self.app_path,
+                                            device_serial=device["device"].serial,
+                                            is_emulator=self.is_emulator,
+                                            output_dir=self.output_dir,
+                                            env_policy=self.env_policy,
+                                            policy_name=self.policy_name,
+                                            random_input=self.random_input,
+                                            script_path=script_path,
+                                            event_count=self.event_count,
+                                            event_interval=self.event_interval,
+                                            timeout=self.timeout,
+                                            keep_app=self.keep_app,
+                                            keep_env=self.keep_env,
+                                            cv_mode=self.cv_mode,
+                                            debug_mode=self.debug_mode,
+                                            profiling_method=self.profiling_method,
+                                            grant_perm=self.grant_perm,
+                                            enable_accessibility_hard=self.enable_accessibility_hard,
+                                            master="http://%s:%d/" % (self.domain, self.rpc_port),
+                                            humanoid=self.humanoid,
+                                            ignore_ad=self.ignore_ad,
+                                            replay_output=self.replay_output)
         device["droidbot"].set_up()
         self.logger.info("Worker: DOMAIN[%s], ADB[%s], QEMU[%d], ID[%d]" %
                          (device["domain"], device["adb_port"],
@@ -213,13 +213,13 @@ class DroidMaster(object):
     def qemu_create_img(self, new_hda, back_hda):
         self.logger.info("%s -> %s" % (back_hda, new_hda))
         p = subprocess.Popen(["qemu-img", "create", "-f", "qcow2", new_hda,
-                              "-o", "backing_file=%s" % back_hda, "8G"])
+                                "-o", "backing_file=%s" % back_hda, "8G"])
         p.wait()
 
     def spawn(self, device_serial, init_script_json):
         """
-          A worker requests to spawn a new worker
-          based on its current state
+            A worker requests to spawn a new worker
+            based on its current state
         """
         if init_script_json in self.successful_spawn_events:
             self.logger.warning("Event spawned already")
@@ -244,7 +244,7 @@ class DroidMaster(object):
             init_script_file.write(init_script_json)
 
         self.start_device(available_devices[0], new_hda,
-                          from_snapshot=True, init_script_path=init_script_path)
+                            from_snapshot=True, init_script_path=init_script_path)
 
         calling_device["qemu"].send_command("delvm spawn")
         calling_device["qemu"].send_command("cont")
@@ -255,7 +255,7 @@ class DroidMaster(object):
 
     def start_worker(self):
         """
-          Start the first worker (with device 0), used by DroidMaster itself
+            Start the first worker (with device 0), used by DroidMaster itself
         """
         available_devices = self.get_available_devices()
         if not len(available_devices):

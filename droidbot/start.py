@@ -14,7 +14,7 @@ def parse_args():
     generate options including host name, port number
     """
     parser = argparse.ArgumentParser(description="Start DroidBot to test an Android app.",
-                                     formatter_class=argparse.RawTextHelpFormatter)
+                                    formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("-d", action="store", dest="device_serial", required=False,
                         help="The serial number of target device (use `adb devices` to find)")
     parser.add_argument("-a", action="store", dest="apk_path", required=True,
@@ -29,22 +29,22 @@ def parse_args():
     #                          "<file>\tget environment policy from a json file.\n")
     parser.add_argument("-policy", action="store", dest="input_policy", default=input_manager.DEFAULT_POLICY,
                         help='Policy to use for test input generation. '
-                             'Default: %s.\nSupported policies:\n' % input_manager.DEFAULT_POLICY +
-                             '  \"%s\" -- No event will be sent, user should interact manually with device; \n'
-                             '  \"%s\" -- Use "adb shell monkey" to send events; \n'
-                             '  \"%s\" -- Explore UI using a naive depth-first strategy;\n'
-                             '  \"%s\" -- Explore UI using a greedy depth-first strategy;\n'
-                             '  \"%s\" -- Explore UI using a naive breadth-first strategy;\n'
-                             '  \"%s\" -- Explore UI using a greedy breadth-first strategy;\n'
-                             %
-                             (
-                                 input_policy.POLICY_NONE,
-                                 input_policy.POLICY_MONKEY,
-                                 input_policy.POLICY_NAIVE_DFS,
-                                 input_policy.POLICY_GREEDY_DFS,
-                                 input_policy.POLICY_NAIVE_BFS,
-                                 input_policy.POLICY_GREEDY_BFS,
-                             ))
+                                'Default: %s.\nSupported policies:\n' % input_manager.DEFAULT_POLICY +
+                                '  \"%s\" -- No event will be sent, user should interact manually with device; \n'
+                                '  \"%s\" -- Use "adb shell monkey" to send events; \n'
+                                '  \"%s\" -- Explore UI using a naive depth-first strategy;\n'
+                                '  \"%s\" -- Explore UI using a greedy depth-first strategy;\n'
+                                '  \"%s\" -- Explore UI using a naive breadth-first strategy;\n'
+                                '  \"%s\" -- Explore UI using a greedy breadth-first strategy;\n'
+                                %
+                                (
+                                    input_policy.POLICY_NONE,
+                                    input_policy.POLICY_MONKEY,
+                                    input_policy.POLICY_NAIVE_DFS,
+                                    input_policy.POLICY_GREEDY_DFS,
+                                    input_policy.POLICY_NAIVE_BFS,
+                                    input_policy.POLICY_GREEDY_BFS,
+                                ))
 
     # for distributed DroidBot
     parser.add_argument("-distributed", action="store", dest="distributed", choices=["master", "worker"],

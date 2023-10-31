@@ -3,7 +3,7 @@ import math
 import os
 
 from .utils import md5
-from .input_event import TouchEvent, LongTouchEvent, ScrollEvent, SetTextEvent, KeyEvent
+from .input_event import TouchEvent, LongTouchEvent, ScrollEvent, SetTextEvent, KeyEvent, WaitUserLogin
 
 
 class DeviceState(object):
@@ -410,6 +410,31 @@ class DeviceState(object):
         possible_events = []
         enabled_view_ids = []
         touch_exclude_view_ids = set()
+        login_suffixes = [
+                '.LoginActivity',
+                '.LoginOtpActivity',
+                '.SignInActivity',
+                '.AuthActivity',
+                '.AuthenticationActivity',
+                '.LoginMain',
+                '.UserLoginActivity',
+                '.LoginScreenActivity',
+                '.StartLoginActivity',
+                '.UserAuthActivity',
+                '.PasswordActivity',
+                '.LoginWithPassword',
+                '.LoginWithOtp',
+                '.OtpLoginActivity',
+                '.TokenSignIn',
+                '.CredentialActivity',
+                '.PinLoginActivity',
+                '.SecureLogin'
+            ]
+        if any(self.foreground_activity.endswith(suffix) for suffix in login_suffixes):
+            possible_events.append(WaitUserLogin(message="Please login to continue"))
+            self.possible_events = possible_events
+            return [] + possible_events
+
         for view_dict in self.views:
             # exclude navigation bar if exists
             if self.__safe_dict_get(view_dict, 'enabled') and \

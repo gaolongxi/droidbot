@@ -80,6 +80,7 @@ KEY_SetTextEvent = "set_text"
 KEY_IntentEvent = "intent"
 KEY_SpawnEvent = "spawn"
 KEY_KillAppEvent = "kill_app"
+KEY_WaitUserLogin = "wait_user_login"
 
 
 class InvalidEventException(Exception):
@@ -147,6 +148,8 @@ class InputEvent(object):
             return ExitEvent(event_dict=event_dict)
         elif event_type == KEY_SpawnEvent:
             return SpawnEvent(event_dict=event_dict)
+        elif event_type == KEY_WaitUserLogin:
+            return WaitUserLogin(event_dict=event_dict)
 
     @abstractmethod
     def get_event_str(self, state):
@@ -784,6 +787,29 @@ class SpawnEvent(InputEvent):
     def get_event_str(self, state):
         return "%s()" % self.__class__.__name__
 
+class WaitUserLogin(UIEvent):
+    """
+    An event to wait user login
+    """
+
+    def __init__(self, message=None, event_dict=None):
+        super().__init__()
+        self.event_type = KEY_WaitUserLogin
+        self.message = message or "Please login to continue"
+        if event_dict is not None:
+            self.__dict__.update(event_dict)
+
+    @staticmethod
+    def get_random_instance(device, app):
+        pass
+
+    def send(self, device):
+        print(self.message)
+        input("Press Enter once you've logged in...")
+        return True
+
+    def get_event_str(self, state):
+        return f"{self.__class__.__name__}(message={self.message})"
 
 EVENT_TYPES = {
     KEY_KeyEvent: KeyEvent,
@@ -792,5 +818,6 @@ EVENT_TYPES = {
     KEY_SwipeEvent: SwipeEvent,
     KEY_ScrollEvent: ScrollEvent,
     KEY_IntentEvent: IntentEvent,
-    KEY_SpawnEvent: SpawnEvent
+    KEY_SpawnEvent: SpawnEvent,
+    KEY_WaitUserLogin: WaitUserLogin
 }

@@ -7,6 +7,7 @@ import re
 
 from abc import abstractmethod
 from .input_event import InputEvent
+from .input_event import WaitUserLogin
 from .utils import safe_re_match
 
 VIEW_ID = '<view_id>'
@@ -546,6 +547,8 @@ class ScriptEvent:
                     device.logger.warning("target_view no match: %s" % target_view)
                 else:
                     event_dict['view'] = matched_view
+        if event_dict['event_type'] == 'wait_user_login':
+            return WaitUserLogin(message=event_dict.get("message"))
         if event_dict['event_type'] == 'spawn':
             event_dict['master'] = input_policy.master
         return InputEvent.from_dict(event_dict)

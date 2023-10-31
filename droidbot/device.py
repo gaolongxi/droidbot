@@ -26,8 +26,8 @@ class Device(object):
     """
 
     def __init__(self, device_serial=None, is_emulator=False, output_dir=None,
-                 cv_mode=False, grant_perm=False, telnet_auth_token=None,
-                 enable_accessibility_hard=False, humanoid=None, ignore_ad=False):
+                cv_mode=False, grant_perm=False, telnet_auth_token=None,
+                enable_accessibility_hard=False, humanoid=None, ignore_ad=False):
         """
         initialize a device connection
         :param device_serial: serial number of target device
@@ -358,8 +358,8 @@ class Device(object):
         :return:
         """
         call_intent = Intent(prefix='start',
-                             action="android.intent.action.CALL",
-                             data_uri="tel:%s" % phone)
+                            action="android.intent.action.CALL",
+                            data_uri="tel:%s" % phone)
         return self.send_intent(intent=call_intent)
 
     def send_sms(self, phone=DEFAULT_NUM, content=DEFAULT_CONTENT):
@@ -370,10 +370,10 @@ class Device(object):
         :return:
         """
         send_sms_intent = Intent(prefix='start',
-                                 action="android.intent.action.SENDTO",
-                                 data_uri="sms:%s" % phone,
-                                 extra_string={'sms_body': content},
-                                 extra_boolean={'exit_on_sent': 'true'})
+                                action="android.intent.action.SENDTO",
+                                data_uri="sms:%s" % phone,
+                                extra_string={'sms_body': content},
+                                extra_boolean={'exit_on_sent': 'true'})
         self.send_intent(intent=send_sms_intent)
         time.sleep(2)
         self.adb.press('66')
@@ -461,7 +461,7 @@ class Device(object):
         db_name = "/data/data/com.android.providers.settings/databases/settings.db"
 
         self.adb.shell("sqlite3 %s \"update '%s' set value='%s' where name='%s'\""
-                       % (db_name, table_name, value, name))
+                        % (db_name, table_name, value, name))
         return True
 
     def send_intent(self, intent):
@@ -637,7 +637,7 @@ class Device(object):
                 return
 
         dumpsys_p = subprocess.Popen(["adb", "-s", self.serial, "shell",
-                                      "dumpsys", "package", package_name], stdout=subprocess.PIPE)
+                                    "dumpsys", "package", package_name], stdout=subprocess.PIPE)
         dumpsys_lines = []
         while True:
             line = dumpsys_p.stdout.readline()

@@ -323,7 +323,7 @@ class ADB(Adapter):
         if orientation == -1:
             orientation = self.get_orientation()
         self.shell("input tap %d %d" %
-                   self.__transform_point_by_orientation((x, y), orientation, self.get_orientation()))
+                    self.__transform_point_by_orientation((x, y), orientation, self.get_orientation()))
 
     def long_touch(self, x, y, duration=2000, orientation=-1):
         """
