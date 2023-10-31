@@ -21,18 +21,8 @@
     "operations": {
         "login_operation": [
             {
-                "event_type": "set_text",
-                "target_view": "login_email",
-                "text": "sample@email.com"
-            },
-            {
-                "event_type": "set_text",
-                "target_view": "login_password",
-                "text": "sample_password"
-            },
-            {
-                "event_type": "touch",
-                "target_view": "login_button"
+                "event_type": "wait_user_login",
+                "message": "Please manually enter your email and password. Once you have manually logged in, press the 'Continue' button in DroidBot to resume operations."
             },
             {
                 "event_type": "exit"
