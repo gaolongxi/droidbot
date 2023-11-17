@@ -260,7 +260,7 @@ class EventLog(object):
                 ["am", "profile", "start", "--sampling", str(self.sampling), str(pid), self.trace_remote_file])
         else:
             self.device.adb.shell(["am", "profile", "start", str(pid), self.trace_remote_file])
-        self.is_profiling = True
+        self.is_psrofiling = True
         self.profiling_pid = pid
 
     def stop(self):

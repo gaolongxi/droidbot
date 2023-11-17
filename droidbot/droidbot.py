@@ -13,6 +13,7 @@ from .device import Device
 from .app import App
 from .env_manager import AppEnvManager
 from .input_manager import InputManager
+from .sysdatamonitor import SysDataMonitor
 
 
 class DroidBot(object):
@@ -95,6 +96,8 @@ class DroidBot(object):
                 ignore_ad=ignore_ad)
             self.app = App(app_path, output_dir=self.output_dir)
 
+            self.sys_data_monitor = SysDataMonitor(self.app.package_name, self.output_dir)
+
             self.env_manager = AppEnvManager(
                 device=self.device,
                 app=self.app,
@@ -152,6 +155,9 @@ class DroidBot(object):
 
             if not self.enabled:
                 return
+            
+            self.sys_data_monitor.start()
+
             if self.droidbox is not None:
                 self.droidbox.set_apk(self.app.app_path)
                 self.droidbox.start_unblocked()
@@ -180,6 +186,8 @@ class DroidBot(object):
             self.env_manager.stop()
         if self.input_manager:
             self.input_manager.stop()
+        if self.sys_data_monitor:
+            self.sys_data_monitor.stop()
         if self.droidbox:
             self.droidbox.stop()
         if self.device:
@@ -189,7 +197,7 @@ class DroidBot(object):
         if not self.keep_app:
             self.device.uninstall_app(self.app)
         if hasattr(self.input_manager.policy, "master") and \
-           self.input_manager.policy.master:
+            self.input_manager.policy.master:
             import xmlrpc.client
             proxy = xmlrpc.client.ServerProxy(self.input_manager.policy.master)
             proxy.stop_worker(self.device.serial)

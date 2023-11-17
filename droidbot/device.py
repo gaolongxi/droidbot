@@ -768,53 +768,68 @@ class Device(object):
     def pull_file(self, remote_file, local_file):
         self.adb.run_cmd(["pull", remote_file, local_file])
 
-    def take_screenshot(self):
-        # image = None
-        #
-        # received = self.adb.shell("screencap -p").replace("\r\n", "\n")
-        # import StringIO
-        # stream = StringIO.StringIO(received)
-        #
-        # try:
-        #     from PIL import Image
-        #     image = Image.open(stream)
-        # except IOError as e:
-        #     self.logger.warning("exception in take_screenshot: %s" % e)
-        # return image
+    def take_screenshot(self, tag=None):
         if self.output_dir is None:
             return None
 
-        from datetime import datetime
-        tag = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         local_image_dir = os.path.join(self.output_dir, "temp")
         if not os.path.exists(local_image_dir):
             os.makedirs(local_image_dir)
 
+        if tag is None:
+            from datetime import datetime
+            tag = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
         if self.adapters[self.minicap] and self.minicap.last_screen:
             # minicap use jpg format
-            local_image_path = os.path.join(local_image_dir, "screen_%s.jpg" % tag)
+            local_image_path = os.path.join(local_image_dir, f"screen_{tag}.jpg")
             with open(local_image_path, 'wb') as local_image_file:
                 local_image_file.write(self.minicap.last_screen)
-            return local_image_path
         else:
             # screencap use png format
-            local_image_path = os.path.join(local_image_dir, "screen_%s.png" % tag)
-            remote_image_path = "/sdcard/screen_%s.png" % tag
-            self.adb.shell("screencap -p %s" % remote_image_path)
+            local_image_path = os.path.join(local_image_dir, f"screen_{tag}.png")
+            remote_image_path = f"/sdcard/screen_{tag}.png"
+            self.adb.shell(f"screencap -p {remote_image_path}")
             self.pull_file(remote_image_path, local_image_path)
-            self.adb.shell("rm %s" % remote_image_path)
+            self.adb.shell(f"rm {remote_image_path}")
 
         return local_image_path
+
+    def dump_ui_xml(self, tag=None):
+        if self.output_dir is None:
+            return None
+        
+        local_xml_dir = os.path.join(self.output_dir, "temp")
+        if not os.path.exists(local_xml_dir):
+            os.makedirs(local_xml_dir)
+        
+        if tag is None:
+            from datetime import datetime
+            tag = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
+        remote_xml_path = f"/sdcard/window_dump_{tag}.xml"
+        local_xml_path = os.path.join(local_xml_dir, f"window_dump_{tag}.xml")
+
+        self.adb.shell(f"uiautomator dump --compressed {remote_xml_path}")
+        self.pull_file(remote_xml_path, local_xml_path)
+        self.adb.shell(f"rm {remote_xml_path}")
+
+        return local_xml_path
 
     def get_current_state(self):
         self.logger.debug("getting current device state...")
         current_state = None
         try:
+            from datetime import datetime
+            tag = datetime.now().strftime("%Y-%m-%d_%H%M%S")
+
             views = self.get_views()
             foreground_activity = self.get_top_activity_name()
             activity_stack = self.get_current_activity_stack()
             background_services = self.get_service_names()
-            screenshot_path = self.take_screenshot()
+            screenshot_path = self.take_screenshot(tag)
+            xml_path = self.dump_ui_xml(tag)
+
             self.logger.debug("finish getting current device state...")
             from .device_state import DeviceState
             current_state = DeviceState(self,
@@ -822,7 +837,8 @@ class Device(object):
                                         foreground_activity=foreground_activity,
                                         activity_stack=activity_stack,
                                         background_services=background_services,
-                                        screenshot_path=screenshot_path)
+                                        screenshot_path=screenshot_path,
+                                        xml_path=xml_path)
         except Exception as e:
             self.logger.warning("exception in get_current_state: %s" % e)
             import traceback

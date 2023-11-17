@@ -12,7 +12,7 @@ class DeviceState(object):
     """
 
     def __init__(self, device, views, foreground_activity, activity_stack, background_services,
-                 tag=None, screenshot_path=None):
+                 tag=None, screenshot_path=None, xml_path=None):
         self.device = device
         self.foreground_activity = foreground_activity
         self.activity_stack = activity_stack if isinstance(activity_stack, list) else []
@@ -22,6 +22,7 @@ class DeviceState(object):
             tag = datetime.now().strftime("%Y-%m-%d_%H%M%S")
         self.tag = tag
         self.screenshot_path = screenshot_path
+        self.xml_path = xml_path
         self.views = self.__parse_views(views)
         self.view_tree = {}
         self.__assemble_view_tree(self.view_tree, self.views)
@@ -184,6 +185,11 @@ class DeviceState(object):
             import shutil
             shutil.copyfile(self.screenshot_path, dest_screenshot_path)
             self.screenshot_path = dest_screenshot_path
+
+            if self.xml_path:
+                dest_xml_path = "%s/window_dump_%s.xml" % (output_dir, self.tag)
+                shutil.copyfile(self.xml_path, dest_xml_path)
+                self.xml_path = dest_xml_path
             # from PIL.Image import Image
             # if isinstance(self.screenshot_path, Image):
             #     self.screenshot_path.save(dest_screenshot_path)
@@ -410,6 +416,7 @@ class DeviceState(object):
         possible_events = []
         enabled_view_ids = []
         touch_exclude_view_ids = set()
+        login_keywords = ['login', 'signin', 'sign in', 'log in', 'password', 'username', 'email', 'authenticate', 'credentials', 'enter', 'submit', 'anthentication']
         login_suffixes = [
                 '.LoginActivity',
                 '.LoginOtpActivity',
@@ -428,19 +435,48 @@ class DeviceState(object):
                 '.TokenSignIn',
                 '.CredentialActivity',
                 '.PinLoginActivity',
-                '.SecureLogin'
+                '.SecureLogin',
+                '.RegistrationActivity',
+                '.SignupActivity',
+                '.RegisterActivity',
+                '.RegisterUserActivity',
+                '.RegisterUser',
+                '.LandingActivity',
+                '.LoginWithAmazonActivity',
+                '.LoginWithFacebookActivity',
+                '.LoginWithGoogleActivity',
+                '.LoginWithTwitterActivity',
+                '.LoginWithMicrosoftActivity',
+                '.NLoginGlobalNormalSignInActivity',
+                '.AIRAppEntry'
             ]
-        if any(self.foreground_activity.endswith(suffix) for suffix in login_suffixes):
+        is_login_activity = any(self.foreground_activity.endswith(suffix) for suffix in login_suffixes)
+        
+        has_login_textview = False
+        for view_dict in self.views:
+            text_content = self.__safe_dict_get(view_dict, 'text', '')
+            if text_content is not None:
+                text_content = text_content.lower()
+                if self.__safe_dict_get(view_dict, 'class') == 'android.widget.TextView' and \
+                    any(keyword in text_content for keyword in login_keywords):
+                    has_login_textview = True
+                    break
+        if is_login_activity or has_login_textview:
             possible_events.append(WaitUserLogin(message="Please login to continue"))
             self.possible_events = possible_events
             return [] + possible_events
+
+        # if any(self.foreground_activity.endswith(suffix) for suffix in login_suffixes):
+        #     possible_events.append(WaitUserLogin(message="Please login to continue"))
+        #     self.possible_events = possible_events
+        #     return [] + possible_events
 
         for view_dict in self.views:
             # exclude navigation bar if exists
             if self.__safe_dict_get(view_dict, 'enabled') and \
                     self.__safe_dict_get(view_dict, 'visible') and \
                     self.__safe_dict_get(view_dict, 'resource_id') not in \
-               ['android:id/navigationBarBackground',
+                ['android:id/navigationBarBackground',
                 'android:id/statusBarBackground']:
                 enabled_view_ids.append(view_dict['temp_id'])
         # enabled_view_ids.reverse()
@@ -488,3 +524,92 @@ class DeviceState(object):
 
         self.possible_events = possible_events
         return [] + possible_events
+
+    # def get_possible_input(self):
+    #     """
+    #     Get a list of possible input events for this state
+    #     :return: list of InputEvent
+    #     """
+    #     if self.possible_events:
+    #         return [] + self.possible_events
+    #     possible_events = []
+    #     enabled_view_ids = []
+    #     touch_exclude_view_ids = set()
+    #     login_suffixes = [
+    #             '.LoginActivity',
+    #             '.LoginOtpActivity',
+    #             '.SignInActivity',
+    #             '.AuthActivity',
+    #             '.AuthenticationActivity',
+    #             '.LoginMain',
+    #             '.UserLoginActivity',
+    #             '.LoginScreenActivity',
+    #             '.StartLoginActivity',
+    #             '.UserAuthActivity',
+    #             '.PasswordActivity',
+    #             '.LoginWithPassword',
+    #             '.LoginWithOtp',
+    #             '.OtpLoginActivity',
+    #             '.TokenSignIn',
+    #             '.CredentialActivity',
+    #             '.PinLoginActivity',
+    #             '.SecureLogin'
+    #         ]
+    #     if any(self.foreground_activity.endswith(suffix) for suffix in login_suffixes):
+    #         possible_events.append(WaitUserLogin(message="Please login to continue"))
+    #         self.possible_events = possible_events
+    #         return [] + possible_events
+
+    #     for view_dict in self.views:
+    #         # exclude navigation bar if exists
+    #         if self.__safe_dict_get(view_dict, 'enabled') and \
+    #                 self.__safe_dict_get(view_dict, 'visible') and \
+    #                 self.__safe_dict_get(view_dict, 'resource_id') not in \
+    #            ['android:id/navigationBarBackground',
+    #             'android:id/statusBarBackground']:
+    #             enabled_view_ids.append(view_dict['temp_id'])
+    #     # enabled_view_ids.reverse()
+
+    #     for view_id in enabled_view_ids:
+    #         if self.__safe_dict_get(self.views[view_id], 'clickable'):
+    #             possible_events.append(TouchEvent(view=self.views[view_id]))
+    #             touch_exclude_view_ids.add(view_id)
+    #             touch_exclude_view_ids.union(self.get_all_children(self.views[view_id]))
+
+    #     for view_id in enabled_view_ids:
+    #         if self.__safe_dict_get(self.views[view_id], 'scrollable'):
+    #             possible_events.append(ScrollEvent(view=self.views[view_id], direction="UP"))
+    #             possible_events.append(ScrollEvent(view=self.views[view_id], direction="DOWN"))
+    #             possible_events.append(ScrollEvent(view=self.views[view_id], direction="LEFT"))
+    #             possible_events.append(ScrollEvent(view=self.views[view_id], direction="RIGHT"))
+
+    #     for view_id in enabled_view_ids:
+    #         if self.__safe_dict_get(self.views[view_id], 'checkable'):
+    #             possible_events.append(TouchEvent(view=self.views[view_id]))
+    #             touch_exclude_view_ids.add(view_id)
+    #             touch_exclude_view_ids.union(self.get_all_children(self.views[view_id]))
+
+    #     for view_id in enabled_view_ids:
+    #         if self.__safe_dict_get(self.views[view_id], 'long_clickable'):
+    #             possible_events.append(LongTouchEvent(view=self.views[view_id]))
+
+    #     for view_id in enabled_view_ids:
+    #         if self.__safe_dict_get(self.views[view_id], 'editable'):
+    #             possible_events.append(SetTextEvent(view=self.views[view_id], text="Hello World"))
+    #             touch_exclude_view_ids.add(view_id)
+    #             # TODO figure out what event can be sent to editable views
+    #             pass
+
+    #     for view_id in enabled_view_ids:
+    #         if view_id in touch_exclude_view_ids:
+    #             continue
+    #         children = self.__safe_dict_get(self.views[view_id], 'children')
+    #         if children and len(children) > 0:
+    #             continue
+    #         possible_events.append(TouchEvent(view=self.views[view_id]))
+
+    #     # For old Android navigation bars
+    #     # possible_events.append(KeyEvent(name="MENU"))
+
+    #     self.possible_events = possible_events
+    #     return [] + possible_events
