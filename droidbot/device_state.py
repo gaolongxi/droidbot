@@ -4,7 +4,7 @@ import os
 
 from .utils import md5
 from .input_event import TouchEvent, LongTouchEvent, ScrollEvent, SetTextEvent, KeyEvent, WaitUserLogin
-
+from control.distribute_crawl import login_logger
 
 class DeviceState(object):
     """
@@ -12,7 +12,7 @@ class DeviceState(object):
     """
 
     def __init__(self, device, views, foreground_activity, activity_stack, background_services,
-                 tag=None, screenshot_path=None, xml_path=None):
+                tag=None, screenshot_path=None, xml_path=None):
         self.device = device
         self.foreground_activity = foreground_activity
         self.activity_stack = activity_stack if isinstance(activity_stack, list) else []
@@ -416,7 +416,9 @@ class DeviceState(object):
         possible_events = []
         enabled_view_ids = []
         touch_exclude_view_ids = set()
-        login_keywords = ['login', 'signin', 'sign in', 'log in', 'password', 'username', 'email', 'authenticate', 'credentials', 'enter', 'submit', 'anthentication']
+        login_keywords = ['login', 'signin', 'sign in', 'log in', 
+                        'password', 'username', 'email', 'authenticate', 'credentials', 
+                        'enter', 'submit', 'anthentication']
         login_suffixes = [
                 '.LoginActivity',
                 '.LoginOtpActivity',
@@ -462,7 +464,8 @@ class DeviceState(object):
                     has_login_textview = True
                     break
         if is_login_activity or has_login_textview:
-            possible_events.append(WaitUserLogin(message="Please login to continue"))
+            print(self.device.serial)
+            possible_events.append(WaitUserLogin(device=self.device, logger = login_logger, message="Please login to continue"))
             self.possible_events = possible_events
             return [] + possible_events
 

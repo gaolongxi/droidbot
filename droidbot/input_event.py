@@ -792,10 +792,13 @@ class WaitUserLogin(UIEvent):
     An event to wait user login
     """
 
-    def __init__(self, message=None, event_dict=None):
+    def __init__(self, device, logger, message=None, event_dict=None):
         super().__init__()
+        self.device = device
+        self.logger = logger
         self.event_type = KEY_WaitUserLogin
         self.message = message or "Please login to continue"
+        self.signal_file = os.path.join('droidbot_signals', f'login_complete_{self.device.serial}.txt')
         if event_dict is not None:
             self.__dict__.update(event_dict)
 
@@ -804,8 +807,26 @@ class WaitUserLogin(UIEvent):
         pass
 
     def send(self, device):
-        print(self.message)
-        input("Press Enter once you've logged in...")
+        self.logger.info(f"Login required on {device.serial}. {self.message}")
+        try:
+            with open(self.signal_file, 'w') as file:
+                file.write('login_required')
+        except IOError as e:
+            self.logger.error(f"Failed to write to signal file for {device.serial}: {e}")
+            return False
+        # input("Press Enter once you've logged in...")
+        self.logger.info(f"Waiting for manual login on {device.serial}")
+        while True:
+            try:
+                with open(self.signal_file, 'r') as file:
+                    content = file.read().strip()
+                if content == 'done':
+                    self.logger.info(f"Login completed on {device.serial}")
+                    break
+            except IOError as e:
+                self.logger.error(f"Failed to read from signal file for {device.serial}: {e}")
+                # Decide whether to return False or continue retrying
+            time.sleep(1)
         return True
 
     def get_event_str(self, state):

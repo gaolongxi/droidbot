@@ -6,8 +6,9 @@ import time
 import re
 
 class SysDataMonitor:
-    def __init__(self, package_name, output_dir, interval=10):
+    def __init__(self, package_name, device_serial, output_dir, interval=10):
         self.package_name = package_name
+        self.device_serial = device_serial
         self.output_dir = output_dir
         self.interval = interval
         self.running = False
@@ -17,7 +18,7 @@ class SysDataMonitor:
         self.csv_filename_gpu = os.path.join(output_dir, "data_gpu.csv")
 
     def get_memory_usage(self):
-        cmd = f'adb shell dumpsys meminfo {self.package_name}'
+        cmd = f'adb -s {self.device_serial} shell dumpsys meminfo {self.package_name}'
         result = subprocess.run(cmd.split(), stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         # print(result.stdout)
         return result.stdout
@@ -50,7 +51,7 @@ class SysDataMonitor:
             writer.writerow({headers[i]: data[i] for i in range(len(data))})
 
     def get_cpu_usage(self):
-        cmd = f'adb shell top -b -n 1 | grep {self.package_name}'
+        cmd = f'adb -s {self.device_serial} shell top -b -n 1 | grep {self.package_name}'
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         # print(result.stdout)
         return result.stdout
@@ -75,7 +76,7 @@ class SysDataMonitor:
                 writer.writerow({headers[i]: data[i] for i in range(len(data))})
 
     def get_gpu_usage(self):
-        cmd = f'adb shell dumpsys gfxinfo {self.package_name}'
+        cmd = f'adb -s {self.device_serial} shell dumpsys gfxinfo {self.package_name}'
         result = subprocess.run(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         # print(result.stdout)
         return result.stdout

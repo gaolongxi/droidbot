@@ -96,7 +96,7 @@ class DroidBot(object):
                 ignore_ad=ignore_ad)
             self.app = App(app_path, output_dir=self.output_dir)
 
-            self.sys_data_monitor = SysDataMonitor(self.app.package_name, self.output_dir)
+            self.sys_data_monitor = SysDataMonitor(self.app.package_name, self.device.serial, self.output_dir)
 
             self.env_manager = AppEnvManager(
                 device=self.device,
