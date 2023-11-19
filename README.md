@@ -84,3 +84,66 @@ A sample evaluation report can be found [here](http://honeynet.github.io/droidbo
 - [DroidBot Blog Posts](http://honeynet.github.io/droidbot/)
 - [droidbotApp Source Code](https://github.com/ylimit/droidbotApp)
 - [How to contact the author](http://ylimit.github.io)
+---
+
+## Updated Droidbot by gaolongxi
+
+### New Functions
+
+1. Add a SysDataMonitor class to record the system-level data(mem, cpu, gpu)
+2. Add a WaitUserLoginEvent in input_event.py to test the login page and remind the user to log on a specific device
+3. Add a dump_ui_xml() function in device.py to save the xml files in the states folder just like screenshots and json files
+4. Add a control folder to apply to the concurrent testing on a serial of devices
+
+### How to use
+
+1. make sure you have python3
+2. make sure the APKPackage folder exists
+3. set the devices' ip in the control/control_crawl.py
+4. make sure the devices is alive, and you can restart the devices
+
+   ```shell
+   adb kill-server
+   adb start-server
+   ```
+
+5. make sure you are in the control folder and run the control_crawl.py
+
+   ```shell
+    cd control
+    python3 control_crawl.py
+   ```
+
+6. when there are new txt files created in the login_signal, which means that the tested app in a specific device is on the login page and you need to manually log in and send the feedback to droidbot
+   
+   ```shell
+    python3 signal_login.py [ip]
+   ```
+
+### Operating result
+
+1. Folder and file structure
+
+    ```shell
+    droidbot/
+    ├── APKPackage/
+    │ ├── xxx.apk
+    │ ├── xxx.apk
+    ├── control/
+    │ ├── login_signal
+    │ ├── output
+    │   ├── device_ip1
+    │   │ ├──apk1
+    │   │ ├──apk2
+    │   │ └── ...
+    │   ├── device_ip2
+    │   │ ├──apk3
+    │   │ ├──apk4
+    │   │ └── ...
+    └── droidbot/
+    ```
+
+2. Workflow of control_crawl.py
+
+   + distribute the app in the apk and create the  needed folders
+   + run the droidbot on each device and the output for each droidbot has been redirected to a specific crawling log file in its own apk folder
