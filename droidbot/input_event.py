@@ -792,7 +792,7 @@ class WaitUserLogin(UIEvent):
     An event to wait user login
     """
 
-    def __init__(self, device, logger, message=None, event_dict=None):
+    def __init__(self, device, logger=None, message=None, event_dict=None):
         super().__init__()
         self.device = device
         self.logger = logger

@@ -18,7 +18,21 @@ class App(object):
         assert app_path is not None
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.app_path = app_path
+        self.base_apk_path = None
+        self.split_apks = []
+        if os.path.isdir(app_path):
+            for file in os.listdir(app_path):
+                if file.endswith('.apk') and not file.startswith('config.'):
+                    self.base_apk_path = os.path.join(app_path, file)
+                elif file.endswith('.apk') and file.startswith('config.'):
+                    self.split_apks.append(os.path.join(app_path, file))
+            if not self.base_apk_path:
+                raise Exception("No base apk found in %s" % app_path)
+            self.app_path = self.base_apk_path
+            print("this is a split apk and the base apk is %s" % self.base_apk_path)
+        else:
+            self.app_path = app_path
+            print("this is a single apk")
 
         self.output_dir = output_dir
         if output_dir is not None:

@@ -4,7 +4,8 @@ import os
 
 from .utils import md5
 from .input_event import TouchEvent, LongTouchEvent, ScrollEvent, SetTextEvent, KeyEvent, WaitUserLogin
-from control.distribute_crawl import login_logger
+# from .logger import login_logger
+from .logger import LoginLogger
 
 class DeviceState(object):
     """
@@ -463,6 +464,7 @@ class DeviceState(object):
                     any(keyword in text_content for keyword in login_keywords):
                     has_login_textview = True
                     break
+        login_logger = LoginLogger(log_file='login_events.log')
         if is_login_activity or has_login_textview:
             print(self.device.serial)
             possible_events.append(WaitUserLogin(device=self.device, logger = login_logger, message="Please login to continue"))

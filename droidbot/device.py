@@ -624,10 +624,18 @@ class Device(object):
         #                       stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         package_name = app.get_package_name()
         if package_name not in self.adb.get_installed_apps():
-            install_cmd = ["adb", "-s", self.serial, "install", "-r"]
+            install_cmd = ["adb", "-s", self.serial, "install-multiple", "-r"]
             if self.grant_perm and self.get_sdk_version() >= 23:
                 install_cmd.append("-g")
-            install_cmd.append(app.app_path)
+            if app.split_apks:
+                install_cmd.extend(app.split_apks)
+            if app.base_apk_path:
+                print("installing split apks")
+                install_cmd.append(app.base_apk_path)
+            else:
+                print("installing single apk")
+                install_cmd.append(app.app_path)
+            print(install_cmd)
             install_p = subprocess.Popen(install_cmd, stdout=subprocess.PIPE)
             while self.connected and package_name not in self.adb.get_installed_apps():
                 print("Please wait while installing the app...")
@@ -765,8 +773,15 @@ class Device(object):
             self.logger.warning("push_file file does not exist: %s" % local_file)
         self.adb.run_cmd(["push", local_file, remote_dir])
 
+    # def pull_file(self, remote_file, local_file):
+    #     self.adb.run_cmd(["pull", remote_file, local_file])
     def pull_file(self, remote_file, local_file):
-        self.adb.run_cmd(["pull", remote_file, local_file])
+        try:
+            output = self.adb.run_cmd(["pull", remote_file, local_file])
+            self.logger.info(f"Successfully pulled file: {output}")
+        except subprocess.CalledProcessError as e:
+            self.logger.error(f"Command failed with exit status {e.returncode}: {e.output}")
+            self.logger.error(f"Error output: {e.stderr}")
 
     def take_screenshot(self, tag=None):
         if self.output_dir is None:
@@ -809,6 +824,13 @@ class Device(object):
 
         remote_xml_path = f"/sdcard/window_dump_{tag}.xml"
         local_xml_path = os.path.join(local_xml_dir, f"window_dump_{tag}.xml")
+
+        # check_cmd = f"if [ -f {remote_xml_path} ]; then echo 'File exists'; else echo 'File does not exist'; fi"
+        # file_check_output = self.adb.shell(check_cmd).strip()
+
+        # if 'File exists' not in file_check_output:
+        #     self.logger.error(f"The file {remote_xml_path} does not exist on the device.")
+        # return None
 
         self.adb.shell(f"uiautomator dump --compressed {remote_xml_path}")
         self.pull_file(remote_xml_path, local_xml_path)

@@ -527,7 +527,7 @@ class UtgGreedySearchPolicy(UtgBasedInputPolicy):
                 continue
             self.__nav_target = state
             navigation_steps = self.utg.get_navigation_steps(from_state=current_state, to_state=self.__nav_target)
-            if len(navigation_steps) > 0:
+            if navigation_steps is not None and len(navigation_steps) > 0:
                 self.__nav_num_steps = len(navigation_steps)
                 return state
 

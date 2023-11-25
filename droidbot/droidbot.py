@@ -182,11 +182,11 @@ class DroidBot(object):
         self.enabled = False
         if self.timer and self.timer.is_alive():
             self.timer.cancel()
-        if self.env_manager:
+        if hasattr(self, 'env_manager') and self.env_manager:
             self.env_manager.stop()
-        if self.input_manager:
+        if hasattr(self, 'input_manager') and self.input_manager:
             self.input_manager.stop()
-        if self.sys_data_monitor:
+        if hasattr(self, 'sys_data_monitor') and self.sys_data_monitor:
             self.sys_data_monitor.stop()
         if self.droidbox:
             self.droidbox.stop()
