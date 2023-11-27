@@ -69,11 +69,13 @@ POSSIBLE_BROADCASTS = [
     "android.intent.action.WEB_SEARCH"
 ]
 
-KEY_KeyEvent = "key"
+KEY_KeyEvent = "press"
 KEY_ManualEvent = "manual"
 KEY_ExitEvent = "exit"
 KEY_TouchEvent = "touch"
 KEY_LongTouchEvent = "long_touch"
+KEY_SelectEvent = "select"
+KEY_UnselectEvent = "unselect"
 KEY_SwipeEvent = "swipe"
 KEY_ScrollEvent = "scroll"
 KEY_SetTextEvent = "set_text"
@@ -136,6 +138,8 @@ class InputEvent(object):
             return TouchEvent(event_dict=event_dict)
         elif event_type == KEY_LongTouchEvent:
             return LongTouchEvent(event_dict=event_dict)
+        elif event_type == KEY_SelectEvent or event_type == KEY_UnselectEvent:
+            return SelectEvent(event_dict=event_dict)
         elif event_type == KEY_SwipeEvent:
             return SwipeEvent(event_dict=event_dict)
         elif event_type == KEY_ScrollEvent:
@@ -441,11 +445,15 @@ class UIEvent(InputEvent):
 
     @staticmethod
     def view_str(state, view):
-        view_class = view['class'].split('.')[-1]
-        view_text = view['text'].replace('\n', '\\n') if 'text' in view and view['text'] else ''
-        view_text = view_text[:10] if len(view_text) > 10 else view_text
-        view_short_sig = f'{state.activity_short_name}/{view_class}-{view_text}'
-        return f"state={state.state_str}, view={view['view_str']}({view_short_sig})"
+        if 'desc' in view:
+            view_short_sig = view['desc'].replace('<', '[').replace('>', ']')
+        else:
+            view_class = view['class'].split('.')[-1]
+            view_text = view['text'].replace('\n', ' \\ ') if 'text' in view and view['text'] else ''
+            view_text = view_text[:50] if len(view_text) > 50 else view_text
+            view_bounds = view['bound_box'] if 'bound_box' in view else ''
+            view_short_sig = f'[{view_class}-{view_class}-{view_text}]'
+        return f"state={state.state_str}, view={view_short_sig}"
 
 
 class TouchEvent(UIEvent):
@@ -470,7 +478,13 @@ class TouchEvent(UIEvent):
 
     def send(self, device):
         x, y = UIEvent.get_xy(x=self.x, y=self.y, view=self.view)
-        device.view_long_touch(x=x, y=y, duration=200)
+        if 'status' in self.view:
+            if self.event_type == KEY_UnselectEvent and 'selected' in self.view['status']:
+                device.view_long_touch(x=x, y=y, duration=200)
+            elif self.event_type == KEY_SelectEvent and 'selected' not in self.view['status']:
+                device.view_long_touch(x=x, y=y, duration=200)
+        else:
+            device.view_long_touch(x=x, y=y, duration=200)
         return True
 
     def get_event_str(self, state):
@@ -478,6 +492,44 @@ class TouchEvent(UIEvent):
             return f"{self.__class__.__name__}({UIEvent.view_str(state, self.view)})"
         elif self.x is not None and self.y is not None:
             return "%s(state=%s, x=%s, y=%s)" % (self.__class__.__name__, state.state_str, self.x, self.y)
+        else:
+            msg = "Invalid %s!" % self.__class__.__name__
+            raise InvalidEventException(msg)
+
+    def get_views(self):
+        return [self.view] if self.view else []
+
+
+class SelectEvent(UIEvent):
+    """
+    select a checkbox
+    """
+
+    def __init__(self, event_type=KEY_SelectEvent, x=None, y=None, view=None, event_dict=None):
+        super().__init__()
+        self.event_type = event_type
+        self.x = x
+        self.y = y
+        self.view = view
+        if event_dict is not None:
+            self.__dict__.update(event_dict)
+
+    def send(self, device):
+        x, y = UIEvent.get_xy(x=self.x, y=self.y, view=self.view)
+        if 'status' in self.view:
+            if self.event_type == KEY_UnselectEvent and 'selected' in self.view['status']:
+                device.view_long_touch(x=x, y=y, duration=200)
+            elif self.event_type == KEY_SelectEvent and 'selected' not in self.view['status']:
+                device.view_long_touch(x=x, y=y, duration=200)
+        else:
+            device.view_long_touch(x=x, y=y, duration=200)
+        return True
+
+    def get_event_str(self, state):
+        if self.view is not None:
+            return f"{self.__class__.__name__}(type={self.event_type}, {UIEvent.view_str(state, self.view)})"
+        elif self.x is not None and self.y is not None:
+            return "%s(type=%s, state=%s, x=%s, y=%s)" % (self.event_type, self.__class__.__name__, state.state_str, self.x, self.y)
         else:
             msg = "Invalid %s!" % self.__class__.__name__
             raise InvalidEventException(msg)
@@ -597,7 +649,7 @@ class ScrollEvent(UIEvent):
     swipe gesture
     """
 
-    def __init__(self, x=None, y=None, view=None, direction="DOWN", event_dict=None):
+    def __init__(self, x=None, y=None, view=None, direction="down", event_dict=None):
         super().__init__()
         self.event_type = KEY_ScrollEvent
         self.x = x
@@ -612,7 +664,7 @@ class ScrollEvent(UIEvent):
     def get_random_instance(device, app):
         x = random.uniform(0, device.get_width())
         y = random.uniform(0, device.get_height())
-        direction = random.choice(["UP", "DOWN", "LEFT", "RIGHT"])
+        direction = random.choice(["up", "down", "left", "right"])
         return ScrollEvent(x, y, direction)
 
     def send(self, device):
