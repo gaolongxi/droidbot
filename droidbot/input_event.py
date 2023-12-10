@@ -478,13 +478,7 @@ class TouchEvent(UIEvent):
 
     def send(self, device):
         x, y = UIEvent.get_xy(x=self.x, y=self.y, view=self.view)
-        if 'status' in self.view:
-            if self.event_type == KEY_UnselectEvent and 'selected' in self.view['status']:
-                device.view_long_touch(x=x, y=y, duration=200)
-            elif self.event_type == KEY_SelectEvent and 'selected' not in self.view['status']:
-                device.view_long_touch(x=x, y=y, duration=200)
-        else:
-            device.view_long_touch(x=x, y=y, duration=200)
+        device.view_long_touch(x=x, y=y, duration=self.duration)
         return True
 
     def get_event_str(self, state):
